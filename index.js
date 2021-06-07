@@ -1,19 +1,29 @@
 const tmi = require("tmi.js");
+const fsPromises = require("fs").promises
 
 console.clear()
 
-const client = new tmi.Client({
-  channels: ["jrasmusbm"],
-});
+const introMessage = `----- NEW SESSION: ${new Date().toDateString()} ----\n`
+fsPromises.appendFile("./.history", introMessage).then(
+  fsPromises.readFile("./.history").then(history => {
+    console.log(history.toString())
 
-client.connect().catch(console.error);
+    const client = new tmi.Client({
+      channels: ["jrasmusbm"],
+    });
 
-client.on(
-  "message",
-  (channel, tags, message, self) => {
-    if (self) return;
-    const date = new Date();
-    const timeStamp = `${date.getHours()}:${date.getMinutes()}`;
-    console.log(`[${timeStamp}] ${tags["display-name"]}: ${message}`);
-  }
-);
+    client.connect().catch(console.error);
+
+    client.on(
+      "message",
+      (channel, tags, message, self) => {
+        if (self) return;
+        const date = new Date();
+        const timeStamp = `${date.getHours()}:${date.getMinutes()}`;
+        const messageOutput = `[${timeStamp}] ${tags["display-name"]}: ${message}`
+        console.log(messageOutput);
+        fsPromises.appendFile("./.history", `${messageOutput}\n`)
+      }
+    );
+  })
+)
